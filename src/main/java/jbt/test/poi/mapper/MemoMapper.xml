@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jbt.test.poi.mapper.MemoMapper">
+	<select id="selectMemoByYearAndMonth" parameterType="String" resultType="String">
+		SELECT m.memo_date memoDate
+		FROM poi.memo m
+		WHERE m.memo_date LIKE '${memoDate}%'
+	</select>
+	<insert id="insertMemo" parameterType="jbt.test.poi.vo.Memo">
+		INSERT INTO poi.memo(memo_date, memo_content, create_date, last_update)
+		VALUES(#{memoDate}, #{memoContent}, NOW(), NOW())
+	</insert>
+	<delete id="deleteMemo" parameterType="int">
+		DELETE FROM poi.memo m
+		WHERE m.memo_no = #{memoNo}
+	</delete>
+	<select id="selectMemoOneByDay" parameterType="String" resultType="jbt.test.poi.vo.Memo">
+		SELECT m.memo_no memoNo, m.memo_date memoDate, m.memo_content memoContent
+		FROM poi.memo m
+		WHERE m.memo_date = #{memoDate}
+	</select>
+	<select id="selectMemoByLastUpdate" resultType="jbt.test.poi.vo.Memo">
+		SELECT m.memo_date memoDate, m.memo_content memoContent, m.last_update lastUpdate
+		FROM poi.memo m
+		ORDER BY m.last_update DESC
+		LIMIT 3 OFFSET 0 
+	</select>
+</mapper>

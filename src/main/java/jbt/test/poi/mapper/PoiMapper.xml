@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jbt.test.poi.mapper.PoiMapper" >
+	<select id="selectPoiSubDataOneByImg" parameterType="int" resultType="jbt.test.poi.vo.PoiSubdata">
+		SELECT poi_img poiImg, poi_content poiContent
+		FROM poi.poi_subdata 
+		WHERE poi_no = #{poiNo}
+	</select>
+	<select id="selectPoiSubDataByCount" resultType="jbt.test.poi.vo.PoiData">
+		SELECT pd.name, pd.dclas, pd.tel_no telNo, pd.lat, pd.lon, pd.poi_no poiNo
+		FROM poi.poi_data pd INNER JOIN poi.poi_subdata ps
+		ON pd.poi_no = ps.poi_no
+		ORDER BY ps.poi_count DESC
+		LIMIT 5 OFFSET 0
+	</select>
+	<select id="selectReviewByImg" parameterType="int" resultType="String">
+		SELECT r.review_img
+		FROM poi.review r
+		WHERE review_no = #{reviewNo}
+	</select>
+	<resultMap id="selectPoiDataByAdminResult" type="jbt.test.poi.vo.PoiData">
+		<result column="name" property="name" />
+		<result column="lclas" property="lclas" />
+		<result column="mlsfc" property="mlsfc" />
+		<result column="sclas" property="sclas" />
+		<result column="dclas" property="dclas" />
+		<result column="tel_no" property="telNo" />
+		<result column="lon" property="lon" />
+		<result column="lat" property="lat" />
+		<result column="poi_content" property="poiContent" />
+		<association property="poiSubdata" javaType="jbt.test.poi.vo.PoiSubdata">
+			<result column="poi_img" property="poiImg" />
+		</association >
+	</resultMap>
+	<select id="selectPoiDataByAdmin" parameterType="int" resultMap="selectPoiDataByAdminResult">
+		SELECT
+			pd.name,
+			pd.lclas,
+			pd.mlsfc,
+			pd.sclas,
+			pd.dclas,
+			pd.tel_no,
+			pd.lon,
+			pd.lat,
+			ps.poi_content,
+			ps.poi_img
+		FROM poi.poi_data pd LEFT JOIN poi.poi_subdata ps
+			ON pd.poi_no = ps.poi_no
+		WHERE pd.poi_no = #{poiNo}
+	</select>
+	<select id="selectPoiDataByCategoryNameCount" resultType="jbt.test.poi.vo.PoiData">
+		SELECT COUNT(*) categoryCount, pd.lclas lclas
+		FROM poi.poi_data pd 
+		GROUP BY pd.lclas
+	</select>
+	<select id="selectPoiSubDataByImg" parameterType="int" resultType="String">
+		SELECT ps.poi_img
+		FROM poi.poi_subdata ps
+		WHERE poi_no = #{poiNo}
+	</select>
+	<insert id="insertAndUpdatePoiSubData" parameterType="jbt.test.poi.vo.PoiSubdata">
+		INSERT INTO poi.poi_subdata (poi_no, poi_content, poi_img, last_update, create_date) 
+		VALUES(#{poiNo}, #{poiContent}, #{poiImg}, NOW(), NOW()) 
+		ON CONFLICT (poi_no) DO UPDATE SET poi_content = #{poiContent}, poi_img = #{poiImg}, last_update = NOW()
+	</insert>
+	<update id="updatePoiDataByAll" parameterType="jbt.test.poi.vo.PoiData">
+		UPDATE poi.poi_data
+		SET tel_no = #{telNo}, name = #{name}
+		WHERE poi_no = #{poiNo}
+	</update>
+	<delete id="deleteReviewByAll" parameterType="int">
+		DELETE FROM poi.review pr WHERE pr.poi_no = #{poiNo};
+	</delete>
+	<delete id="deletePoiSubdata" parameterType="int">
+		DELETE FROM poi.poi_subdata ps WHERE ps.poi_no = #{poiNo};
+	</delete>
+	<delete id="deletePoiData" parameterType="int">
+		DELETE FROM poi.poi_data pd WHERE pd.poi_no = #{poiNo};
+	</delete>
+	<delete id="deleteReview" parameterType="int">
+		DELETE FROM poi.review pr
+		WHERE pr.review_no = #{reviewNo}
+	</delete>
+	<select id="selectPoiDataByPoiCategoryCode" parameterType="jbt.test.poi.vo.PoiCategory" resultType="String">
+		SELECT pc.poi_category_code poiCategoryCode
+		FROM poi.poi_category pc
+		WHERE pc.lclasdc = #{lclas} and 
+			  pc.mlsfcdc = #{mlsfc} and
+			  pc.sclasdc = #{sclas} and
+			  pc.dclasdc = #{dclas} and
+			  pc.bclasdc = #{bclasdc}
+	</select>
+	<insert id="insertFirstPoiSubdata" parameterType="jbt.test.poi.vo.PoiSubdata">
+		INSERT INTO poi.poi_subdata(poi_no, poi_content, poi_img, poi_count, last_update, create_date)
+		VALUES(#{poiNo}, #{poiContent}, #{poiImg}, 0, NOW(), NOW())
+	</insert>
+	<insert id="insertPoiData" parameterType="jbt.test.poi.vo.PoiData">
+		INSERT INTO poi.poi_data(name, poi_category_code, lclas, mlsfc, sclas, dclas, tel_no, lon, lat)
+		VALUES(#{name}, #{poiCategoryCode}, #{lclas}, #{mlsfc}, #{sclas}, #{dclas}, #{telNo}, #{lon}, #{lat})
+		    <selectKey resultType="int" keyProperty="poiNo" order="AFTER">
+		        SELECT currval('poi.poi_poi_no_seq') as poiNo
+		    </selectKey>
+	</insert>
+	<select id="selectPoiCategoryByDclasdc" parameterType="String" resultType="jbt.test.poi.vo.PoiCategory">
+		SELECT pc.dclasdc, pc.bclasdc 
+		FROM poi.poi_category pc
+		WHERE pc.sclasdc = #{sclasdc}
+	</select>
+	<select id="selectPoiCategoryBySclasdc" parameterType="String" resultType="jbt.test.poi.vo.PoiCategory">
+		SELECT DISTINCT pc.sclasdc 
+		FROM poi.poi_category pc 
+		WHERE pc.mlsfcdc = #{mlsfcdc}
+	</select>
+	<select id="selectPoiCategoryByMlsfcdc" parameterType="String" resultType="jbt.test.poi.vo.PoiCategory">
+		SELECT DISTINCT pc.mlsfcdc mlsfcdc
+		FROM poi.poi_category pc
+		WHERE pc.lclasdc = #{lclasdc}
+	</select>
+	<select id="selectPoiCategoryByLclasdc" resultType="jbt.test.poi.vo.PoiCategory">
+		SELECT DISTINCT pc.lclasdc lclasdc
+		FROM poi.poi_category pc
+	</select>
+	<select id="selectPoiDateByCategory" parameterType="java.util.Map" resultType="jbt.test.poi.vo.PoiData">
+		SELECT pd.poi_no poiNo, pd.name, pd.lon lon, pd.lat lat, pd.tel_no telNo
+		FROM poi.poi_data pd INNER JOIN poi.poi_category pc
+		ON pd.poi_category_code = pc.poi_category_code
+		WHERE pc.lclasdc = #{lclasdc} and pd.poi_no > #{poiNo}
+		LIMIT 20 OFFSET 0
+	</select>
+	<select id="selectPoiCategoryList" resultType="String">
+		SELECT DISTINCT pc.lclasdc lclasdc
+		FROM poi.poi_category pc
+	</select>
+	<select id="selectPoiDataBySearch" parameterType="String" resultType="jbt.test.poi.vo.PoiData">
+		SELECT name, tel_no telNo, dclas, lon, lat, poi_no poiNo
+		FROM poi.poi_data
+		WHERE (name LIKE '${searchData}%') OR (dclas LIKE '%${searchData}%')
+	</select>
+	<select id="selectPoiDataByRoadView" parameterType="int" resultType="jbt.test.poi.vo.PoiData">
+		SELECT pd.lon lon, pd.lat lat
+		FROM poi.poi_data pd
+		WHERE pd.poi_no = #{poiNo}
+	</select>
+
+	<select id="selectReview" parameterType="int" resultType="jbt.test.poi.vo.Review">
+		SELECT pr.user_Id userId, pr.review_content reviewContent, pr.review_img reviewFileName, pr.review_no reviewNo
+		FROM poi.review pr
+		WHERE pr.poi_no = #{poiNo}
+		ORDER BY pr.last_update DESC
+	</select>
+	<insert id="insertReview" parameterType="jbt.test.poi.vo.Review">
+		INSERT INTO poi.review(user_id, poi_no, review_content, review_img, create_date, last_update)
+		VALUES(#{userId}, #{poiNo}, #{reviewContent}, #{reviewFileName}, NOW(), NOW())
+	</insert>
+	<resultMap id="selectPoiDataResult" type="jbt.test.poi.vo.PoiData">
+		<result column="name" property="name" />
+		<result column="tel_no" property="telNo" />
+		<association property="poiSubdata" javaType="jbt.test.poi.vo.PoiSubdata">
+			<result column="poi_content" property="poiContent" />
+			<result column="poi_img" property="poiImg" />
+		</association>
+	</resultMap>
+	<select id="selectPoiData" parameterType="int" resultMap="selectPoiDataResult">
+		SELECT pd.name, pd.tel_no, psd.poi_content, psd.poi_img
+		FROM poi.poi_data pd LEFT JOIN poi.poi_subdata psd
+		ON pd.poi_no = psd.poi_no
+		WHERE pd.poi_no = #{poiNo}
+	</select>
+	<update id="updataPoiData" parameterType="jbt.test.poi.vo.PoiData">
+		UPDATE poi.poi_data pd
+		SET pd.poi_name = #{poiName}, pd.tel_no = #{telNo}
+		WHERE poi_no = #{poiNo}
+	</update>
+	<insert id="insertPoiSubdata" parameterType="int">
+		INSERT INTO poi.poi_subdata (poi_no, poi_content, poi_img, poi_count, last_update, create_date) 
+		VALUES(#{poiNo}, '', 'default.jpg', 1, NOW(), NOW()) 
+		ON CONFLICT (poi_no) DO UPDATE SET poi_count = 1 +(select poi_count from poi.poi_subdata where poi_no = #{poiNo}), last_update = NOW()
+	</insert>
+	<select id="selectPoi" resultType="jbt.test.poi.vo.PoiData">
+		SELECT 
+			p.name as name, 
+			p.poi_category_code poiCategoryCode, 
+			p.lclas lclas,
+			p.mlsfc mlsfc,
+			p.lon lon, 
+			p.lat lat, 
+			poi_no poiNo
+		FROM poi.poi_data p
+	</select>
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jbt.test.poi.mapper.UserMapper">
+	<delete id="delteRouteByAdmin" parameterType="String">
+		DELETE FROM poi.route r
+		WHERE r.user_id = #{userId}
+	</delete>
+	<delete id="deleteRouteSubDataByAdmin" parameterType="int">
+		DELETE FROM poi.route_subdata rs
+		WHERE rs.route_no = #{routeNo}
+	</delete>
+	<select id="selectRouteByAdmin" parameterType="String" resultType="Integer">
+		SELECT r.route_no routeNo
+		FROM poi.route r
+		WHERE r.user_id = #{userId}
+	</select>
+	<delete id="deleteReviewByAdmin" parameterType="String">
+		DELETE FROM poi.review r
+		WHERE r.user_id = #{userId}
+	</delete>
+	<delete id="deleteUser" parameterType="String">
+		DELETE FROM poi.user u
+		WHERE u.user_id = #{userId}
+	</delete>
+	<select id="selectUserByAdmin" resultType="jbt.test.poi.vo.User">
+		SELECT u.user_id userId, u.user_name userName, u.create_date createDate
+		FROM poi.user u
+		WHERE u.user_id != 'admin'
+	</select>
+	<select id="selectLoginCk" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		FROM poi.user u
+		WHERE u.user_id = #{userId}
+	</select>
+	<insert id="insertUser" parameterType="jbt.test.poi.vo.User">
+		INSERT INTO poi.user(user_id, user_pw, user_role, user_name, last_update, create_date)
+		VALUES(#{userId}, #{userPw}, #{userRole}, #{userName}, NOW(), NOW())
+	</insert>
+	<select id="selectUserByLogin" parameterType="String" resultType="jbt.test.poi.vo.User">
+		SELECT 
+			user_id userId,
+			user_pw userPw,
+			user_role userRole
+		FROM poi.user
+		WHERE user_id = #{userId}
+	</select>
+</mapper>
